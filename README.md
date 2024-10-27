@@ -22,4 +22,4 @@ JavaScript: Lógica para validação de agendamentos, restrição de acesso e co
 Como Executar o Projeto
 Clone o repositório ou copie os arquivos localmente.
 Para acessar a lista de agendamentos, clique no botão de administrador e insira a senha: admin123.
-Obs: A senha pode ser modificada no código JS bem como os horários e dias de atendimento.
+Obs: A senha pode ser modificada no código JS bem como os horários e dias de atendimento.  Link para testar o API https://mourapontes.github.io/API-Agendamento/
