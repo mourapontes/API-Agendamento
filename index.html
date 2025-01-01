@@ -1,38 +1,44 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento de Serviços</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamento de Salão</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Agendamento de Serviços</h1>
+  <div class="container">
+    <h1>Agendamento de Salão de Beleza</h1>
+    <form id="agendamento-form">
+      <label for="nome">Nome:</label>
+      <input type="text" id="nome" name="nome" required>
 
-        <!-- Formulário de Agendamento -->
-        <form id="form-agendamento" onsubmit="agendar(event)">
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" required>
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" name="email" required>
 
-            <label for="data">Data:</label>
-            <input type="date" id="data" required>
+      <label for="servico">Serviço:</label>
+      <select id="servico" name="servico" required>
+        <option value="">Selecione...</option>
+        <option value="corte">Corte de cabelo</option>
+        <option value="pintura">Pintura</option>
+        <option value="manicure">Manicure</option>
+        <option value="pedicure">Pedicure</option>
+      </select>
 
-            <label for="hora">Horário:</label>
-            <select id="hora" required></select>
+      <label for="data">Data:</label>
+      <input type="date" id="data" name="data" required>
 
-            <button type="submit">Agendar</button>
-        </form>
+      <label for="horario">Horário:</label>
+      <input type="time" id="horario" name="horario" required>
 
-        <button id="btn-admin" onclick="mostrarAdmin()">Acesso Administrador</button>
+      <button type="submit">Agendar</button>
+    </form>
 
-        <!-- Lista de Agendamentos (Visível somente para administrador) -->
-        <div id="admin-panel" class="hidden">
-            <h2>Agendamentos</h2>
-            <ul id="lista-agendamentos"></ul>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+    <h2>Agendamentos</h2>
+    <ul id="lista-agendamentos">
+      <!-- Os agendamentos aparecerão aqui -->
+    </ul>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
