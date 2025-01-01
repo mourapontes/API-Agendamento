@@ -1,53 +1,47 @@
-// Horários disponíveis para agendamento
-const horariosManha = ["08:00", "08:40", "09:20", "10:00", "10:40", "11:20"];
-const horariosTarde = ["14:00", "14:40", "15:20", "16:00", "16:40", "17:20"];
+const API_BASE_URL = "https://api-agendamento.vercel.app/api";
 
-// Lista para armazenar os agendamentos realizados
-let agendamentos = [];
+const form = document.getElementById("agendamento-form");
+const listaAgendamentos = document.getElementById("lista-agendamentos");
 
-// Preencher o campo de horários
-const selectHora = document.getElementById("hora");
-[...horariosManha, ...horariosTarde].forEach(hora => {
-    const option = document.createElement("option");
-    option.value = hora;
-    option.textContent = hora;
-    selectHora.appendChild(option);
+// Carrega os agendamentos ao iniciar a página
+document.addEventListener("DOMContentLoaded", carregarAgendamentos);
+
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const nome = document.getElementById("nome").value;
+  const email = document.getElementById("email").value;
+  const servico = document.getElementById("servico").value;
+  const data = document.getElementById("data").value;
+  const horario = document.getElementById("horario").value;
+
+  const novoAgendamento = { nome, email, servico, data, horario };
+  await fetch(`${API_BASE_URL}/agendamentos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(novoAgendamento),
+  });
+
+  form.reset();
+  carregarAgendamentos();
 });
 
-// Função para verificar se o horário já está agendado
-function horarioDisponivel(data, hora) {
-    return !agendamentos.some(ag => ag.data === data && ag.hora === hora);
+async function carregarAgendamentos() {
+  const resposta = await fetch(`${API_BASE_URL}/agendamentos`);
+  const agendamentos = await resposta.json();
+
+  listaAgendamentos.innerHTML = "";
+  agendamentos.forEach((agendamento) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${agendamento.nome}</strong> agendou um ${agendamento.servico} em ${agendamento.data} às ${agendamento.horario}.
+      <button onclick="cancelarAgendamento(${agendamento.id})">Cancelar</button>
+    `;
+    listaAgendamentos.appendChild(li);
+  });
 }
 
-// Função para realizar o agendamento
-function agendar(event) {
-    event.preventDefault();
-
-    const nome = document.getElementById("nome").value;
-    const data = document.getElementById("data").value;
-    const hora = document.getElementById("hora").value;
-
-    if (horarioDisponivel(data, hora)) {
-        agendamentos.push({ nome, data, hora });
-        const lista = document.getElementById("lista-agendamentos");
-
-        const li = document.createElement("li");
-        li.textContent = `${data} - ${hora} - ${nome}`;
-        lista.appendChild(li);
-
-        alert("Agendamento realizado com sucesso!");
-        document.getElementById("form-agendamento").reset();
-    } else {
-        alert("Erro: Este horário já está agendado.");
-    }
-}
-
-// Função para mostrar a área do administrador
-function mostrarAdmin() {
-    const senha = prompt("Digite a senha de administrador:");
-    if (senha === "admin123") {
-        document.getElementById("admin-panel").classList.remove("hidden");
-    } else {
-        alert("Senha incorreta!");
-    }
+async function cancelarAgendamento(id) {
+  await fetch(`${API_BASE_URL}/agendamentos?id=${id}`, { method: "DELETE" });
+  carregarAgendamentos();
 }
