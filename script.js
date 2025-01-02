@@ -1,16 +1,15 @@
-const API_BASE_URL = "https://vercel.com/mourapontes-projects/api-agendamento";
+const API_BASE_URL = "https://api-agendamento-git-main-mourapontes-projects.vercel.app/"; // Certifique-se de que esta URL está correta.
 
 const form = document.getElementById("agendamento-form");
 const listaAgendamentos = document.getElementById("lista-agendamentos");
 
-// Carrega os agendamentos ao iniciar a página
+// Carrega os agendamentos quando a página é carregada
 document.addEventListener("DOMContentLoaded", carregarAgendamentos);
 
-// Evento para o formulário de agendamento
+// Evento de submissão do formulário para criar um novo agendamento
 form.addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  // Obtem os dados do formulário
   const nome = document.getElementById("nome").value;
   const email = document.getElementById("email").value;
   const servico = document.getElementById("servico").value;
@@ -20,7 +19,7 @@ form.addEventListener("submit", async function (e) {
   const novoAgendamento = { nome, email, servico, data, horario };
 
   try {
-    // Faz o POST do novo agendamento
+    // Envia o novo agendamento para a API
     const resposta = await fetch(`${API_BASE_URL}/agendamentos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -28,22 +27,21 @@ form.addEventListener("submit", async function (e) {
     });
 
     if (!resposta.ok) {
-      throw new Error("Erro ao criar o agendamento.");
+      throw new Error("Erro ao criar o agendamento. Verifique os dados enviados.");
     }
 
-    // Reseta o formulário e recarrega a lista
     alert("Agendamento realizado com sucesso!");
-    form.reset();
-    carregarAgendamentos();
+    form.reset(); // Limpa o formulário
+    carregarAgendamentos(); // Atualiza a lista de agendamentos
   } catch (error) {
     console.error(error);
-    alert("Erro ao criar o agendamento. Tente novamente.");
+    alert("Erro ao criar o agendamento. Tente novamente mais tarde.");
   }
 });
 
+// Carrega os agendamentos existentes
 async function carregarAgendamentos() {
   try {
-    // Faz a chamada para listar os agendamentos
     const resposta = await fetch(`${API_BASE_URL}/agendamentos`);
     if (!resposta.ok) {
       throw new Error("Erro ao carregar os agendamentos.");
@@ -51,18 +49,20 @@ async function carregarAgendamentos() {
 
     const agendamentos = await resposta.json();
 
-    // Atualiza a lista no DOM
+    // Limpa a lista antes de preencher com os novos dados
     listaAgendamentos.innerHTML = "";
     agendamentos.forEach((agendamento) => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${agendamento.nome}</strong> agendou um ${agendamento.servico} em ${formatarData(agendamento.data)} às ${agendamento.horario}.
+        <strong>${agendamento.nome}</strong> agendou um <em>${agendamento.servico}</em> em ${formatarData(
+        agendamento.data
+      )} às ${agendamento.horario}.
         <button class="cancelar-btn" data-id="${agendamento.id}">Cancelar</button>
       `;
       listaAgendamentos.appendChild(li);
     });
 
-    // Adiciona ouvintes de evento aos botões "Cancelar"
+    // Adiciona evento de clique para cada botão "Cancelar"
     document.querySelectorAll(".cancelar-btn").forEach((botao) => {
       botao.addEventListener("click", function () {
         const id = this.getAttribute("data-id");
@@ -71,13 +71,13 @@ async function carregarAgendamentos() {
     });
   } catch (error) {
     console.error(error);
-    alert("Erro ao carregar os agendamentos. Tente novamente.");
+    alert("Não foi possível carregar os agendamentos. Tente novamente mais tarde.");
   }
 }
 
+// Cancela um agendamento baseado no ID
 async function cancelarAgendamento(id) {
   try {
-    // Faz o DELETE do agendamento
     const resposta = await fetch(`${API_BASE_URL}/agendamentos/${id}`, {
       method: "DELETE",
     });
@@ -87,16 +87,15 @@ async function cancelarAgendamento(id) {
     }
 
     alert("Agendamento cancelado com sucesso!");
-    carregarAgendamentos();
+    carregarAgendamentos(); // Atualiza a lista de agendamentos
   } catch (error) {
     console.error(error);
     alert("Erro ao cancelar o agendamento. Tente novamente.");
   }
 }
 
-// Função para formatar a data em um formato mais amigável
+// Formata a data para um formato mais amigável
 function formatarData(data) {
-  // Converte a data para um formato legível (ex.: 2023-10-15 -> 15/10/2023)
   const partes = data.split("-");
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
