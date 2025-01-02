@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://api-agendamento-git-main-mourapontes-projects.vercel.app/"; // Certifique-se de que esta URL está correta.
+const API_BASE_URL = "https://api-agendamento-sand.vercel.app/"; // Certifique-se de que esta URL está correta.
 
 const form = document.getElementById("agendamento-form");
 const listaAgendamentos = document.getElementById("lista-agendamentos");
