@@ -1,9 +1,8 @@
 const { createClient } = require("@libsql/client");
 
 const db = createClient({
-  url: "https://app.turso.tech/mourapontes/databases/agendamento",
-  authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzU3NTQ2OTgsImlkIjoiYjllMzE3MTctMTRhZC00ZGRjLWJjM2MtYTNlYWM0ZWNiYTNmIiwicmlkIjoiNWNlNmFhYWYtODAwOC00NmYyLThjMWMtNGFlMjQ1ZTE5NjJmIn0.jEoy3Qa-5Ung4dWMaKChTyC5uzbVCYQdzAJ8lSZUxaQuv_5WOxIhYbxVOP0TaxFxqmCui7Bfdd_bcUft3EX3Bw
-"
+  url: "libsql://agendamento-mourapontes.aws-us-east-1.turso.io",
+  authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzU4MTk2MjQsImlkIjoiYjllMzE3MTctMTRhZC00ZGRjLWJjM2MtYTNlYWM0ZWNiYTNmIiwicmlkIjoiNWNlNmFhYWYtODAwOC00NmYyLThjMWMtNGFlMjQ1ZTE5NjJmIn0.SsVvHZpZcZuq4HPMf7M6qa1F284_ZYwI1JvomYeHREq7T0G0k-p7ZX7p7DsAn6ffvSL5-YzK9P_iBuTMEO4RBw"
 });
 
 module.exports = async (req, res) => {
