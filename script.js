@@ -1,101 +1,110 @@
-const API_BASE_URL = "https://api-agendamento-sand.vercel.app/"; // Certifique-se de que esta URL está correta.
+const supabase = window.supabase;
 
-const form = document.getElementById("agendamento-form");
-const listaAgendamentos = document.getElementById("lista-agendamentos");
-
-// Carrega os agendamentos quando a página é carregada
-document.addEventListener("DOMContentLoaded", carregarAgendamentos);
-
-// Evento de submissão do formulário para criar um novo agendamento
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const nome = document.getElementById("nome").value;
-  const email = document.getElementById("email").value;
-  const servico = document.getElementById("servico").value;
-  const data = document.getElementById("data").value;
-  const horario = document.getElementById("horario").value;
-
-  const novoAgendamento = { nome, email, servico, data, horario };
-
-  try {
-    // Envia o novo agendamento para a API
-    const resposta = await fetch(`${API_BASE_URL}/agendamentos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(novoAgendamento),
-    });
-
-    if (!resposta.ok) {
-      throw new Error("Erro ao criar o agendamento. Verifique os dados enviados.");
+document.addEventListener('DOMContentLoaded', () => {
+    // Buscar alunos do Supabase filtrando por rota
+    async function consultarAlunos(rota) {
+        let query = supabase.from('alunos').select('id, nome, turma, rota');
+        if (rota) query = query.eq('rota', rota);
+        const { data, error } = await query;
+        if (error) {
+            alert('Erro ao consultar alunos');
+            return [];
+        }
+        return data;
     }
 
-    alert("Agendamento realizado com sucesso!");
-    form.reset(); // Limpa o formulário
-    carregarAgendamentos(); // Atualiza a lista de agendamentos
-  } catch (error) {
-    console.error(error);
-    alert("Erro ao criar o agendamento. Tente novamente mais tarde.");
-  }
+    // Buscar presenças do dia selecionado
+    async function consultarPresencas(dataSelecionada) {
+        const { data, error } = await supabase
+            .from('presencas')
+            .select('aluno_id, presente')
+            .eq('data_frequencia', dataSelecionada);
+        if (error) {
+            alert('Erro ao consultar presenças');
+            return [];
+        }
+        // Retorna um mapa: { aluno_id: presente }
+        const mapa = {};
+        data.forEach(p => { mapa[p.aluno_id] = p.presente; });
+        return mapa;
+    }
+
+    // Renderizar lista de alunos com presença marcada
+    async function renderizarAlunos() {
+        const rota = document.getElementById('filtro-rota').value;
+        const dataSelecionada = document.getElementById('filtro-data').value;
+        const alunos = await consultarAlunos(rota);
+        let mapaPresencas = {};
+        if (dataSelecionada) {
+            mapaPresencas = await consultarPresencas(dataSelecionada);
+        }
+        const lista = document.getElementById('lista-alunos');
+        lista.innerHTML = '';
+        let relatorioHTML = '<strong>Relatório de Presença:</strong><br><ul>';
+        alunos.forEach(aluno => {
+            const checked = mapaPresencas[aluno.id] ? 'checked' : '';
+            const presenteTexto = mapaPresencas[aluno.id] ? 'Presente' : 'Faltou';
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <input type="checkbox" data-id="${aluno.id}" ${checked} />
+                <span>${aluno.nome} - Turma: ${aluno.turma} - Rota: ${aluno.rota}</span>
+            `;
+            lista.appendChild(li);
+            // Adiciona a rota no relatório
+            relatorioHTML += `<li>${aluno.nome} - ${aluno.rota} - ${presenteTexto}</li>`;
+        });
+        relatorioHTML += '</ul>';
+        document.getElementById('relatorio').innerHTML = relatorioHTML;
+    }
+
+    // Evento do botão Carregar
+    document.getElementById('btn-carregar-data').addEventListener('click', async () => {
+        const dataSelecionada = document.getElementById('filtro-data').value;
+        if (!dataSelecionada) {
+            alert('Selecione uma data!');
+            return;
+        }
+        await renderizarAlunos();
+    });
+
+    // Evento do botão Salvar Presenças
+    document.getElementById('btn-salvar-presenca').addEventListener('click', async () => {
+        const dataSelecionada = document.getElementById('filtro-data').value;
+        if (!dataSelecionada) {
+            alert('Selecione uma data!');
+            return;
+        }
+        const presencas = [];
+        document.querySelectorAll('#lista-alunos input[type="checkbox"]').forEach(input => {
+            presencas.push({
+                aluno_id: Number(input.dataset.id),
+                data_frequencia: dataSelecionada,
+                presente: input.checked
+            });
+        });
+        const { error } = await supabase.from('presencas').upsert(presencas, { onConflict: ['aluno_id', 'data_frequencia'] });
+        if (error) {
+            alert('Erro ao salvar presenças: ' + error.message);
+        } else {
+            alert('Presenças salvas!');
+            await renderizarAlunos(); // Atualiza a lista após salvar
+        }
+    });
+
+    // Evento do botão PDF
+    document.getElementById('btn-salvar-pdf').addEventListener('click', () => {
+        const lista = document.getElementById('lista-alunos');
+        const dataSelecionada = document.getElementById('filtro-data').value;
+        let relatorio = 'Secretaria Municipal de Educação\nTransporte Escolar\n\n';
+        relatorio += `Data da Frequência: ${dataSelecionada}\n\nRelatório de Frequência:\n\n`;
+        lista.querySelectorAll('li').forEach(li => {
+            const nome = li.querySelector('span').innerText;
+            const presente = li.querySelector('input').checked ? 'Presente' : 'Faltou';
+            relatorio += `${nome} - ${presente}\n`;
+        });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(relatorio, 10, 10);
+        doc.save('relatorio-frequencia.pdf');
+    });
 });
-
-// Carrega os agendamentos existentes
-async function carregarAgendamentos() {
-  try {
-    const resposta = await fetch(`${API_BASE_URL}/agendamentos`);
-    if (!resposta.ok) {
-      throw new Error("Erro ao carregar os agendamentos.");
-    }
-
-    const agendamentos = await resposta.json();
-
-    // Limpa a lista antes de preencher com os novos dados
-    listaAgendamentos.innerHTML = "";
-    agendamentos.forEach((agendamento) => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <strong>${agendamento.nome}</strong> agendou um <em>${agendamento.servico}</em> em ${formatarData(
-        agendamento.data
-      )} às ${agendamento.horario}.
-        <button class="cancelar-btn" data-id="${agendamento.id}">Cancelar</button>
-      `;
-      listaAgendamentos.appendChild(li);
-    });
-
-    // Adiciona evento de clique para cada botão "Cancelar"
-    document.querySelectorAll(".cancelar-btn").forEach((botao) => {
-      botao.addEventListener("click", function () {
-        const id = this.getAttribute("data-id");
-        cancelarAgendamento(id);
-      });
-    });
-  } catch (error) {
-    console.error(error);
-    alert("Não foi possível carregar os agendamentos. Tente novamente mais tarde.");
-  }
-}
-
-// Cancela um agendamento baseado no ID
-async function cancelarAgendamento(id) {
-  try {
-    const resposta = await fetch(`${API_BASE_URL}/agendamentos/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!resposta.ok) {
-      throw new Error("Erro ao cancelar o agendamento.");
-    }
-
-    alert("Agendamento cancelado com sucesso!");
-    carregarAgendamentos(); // Atualiza a lista de agendamentos
-  } catch (error) {
-    console.error(error);
-    alert("Erro ao cancelar o agendamento. Tente novamente.");
-  }
-}
-
-// Formata a data para um formato mais amigável
-function formatarData(data) {
-  const partes = data.split("-");
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
